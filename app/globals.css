@@ -1,0 +1,34 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap');
+@import 'tailwindcss';
+:root{--green:#17a34a;--dark:#192a22;--muted:#76837b}*{box-sizing:border-box}html{scroll-behavior:smooth}body{font-family:'DM Sans',Arial,sans-serif;color:var(--dark);background:#fff}button,a{cursor:pointer}button:disabled{opacity:.5;cursor:not-allowed}.wrap{width:min(1216px,calc(100% - 36px));margin-inline:auto}.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:10px;padding:12px 20px;font-size:14px;font-weight:800;background:#169b46;color:white;transition:.2s}.btn:hover{background:#0d8237}.btn-outline{background:white;color:#169b46;border:1px solid #b7dbbf}.btn-outline:hover{background:#f0fff3}.input{width:100%;border:1px solid #dee6df;background:white;border-radius:10px;padding:12px 14px;outline:0}.input:focus{border-color:#19a44c;box-shadow:0 0 0 3px #19a44c16}.panel{border:1px solid #edf0ec;background:white;border-radius:16px;box-shadow:0 5px 24px #172e1810}.section-title{font-size:27px;font-weight:800;letter-spacing:-.7px}.subtle{color:#7d8980}.chip{border:1px solid #e2e8e3;border-radius:999px;padding:7px 13px;background:white;font-size:13px}.chip.active{background:#e6f8eb;border-color:#58be73;color:#118638}.skeleton{animation:pulse 1.5s infinite alternate;background:#edf3ee;border-radius:12px}@keyframes pulse{to{opacity:.5}}
+
+.home-hero{background-image:url("https://images.unsplash.com/photo-1542838132-92c53300491e?w=1800&q=90");background-size:cover;background-position:center 55%}.section-title{border-left:3px solid #00b77a;padding-left:11px;font-size:23px}.wrap{width:min(1216px,calc(100% - 32px))}@media(max-width:600px){.section-title{font-size:20px}.home-hero{background-position:60% center}}
+
+/* Catalog select padding reserves room for the native dropdown arrow on either OS. */
+.catalog-select{padding-inline:16px 42px;min-height:54px;cursor:pointer;transition:border-color .2s,box-shadow .2s,transform .2s}
+.catalog-select:hover{border-color:#16a34a;box-shadow:0 4px 18px #15803d12}
+footer a:not(.social-icon){display:inline-block;transition:color .2s ease,transform .2s ease}
+footer a:not(.social-icon):hover{color:#4ade80;transform:translateX(4px)}
+.social-icon{display:grid;place-items:center;width:30px;height:30px;border-radius:50%;border:1px solid #ffffff29;transition:background .2s,transform .2s,color .2s}
+.social-icon:hover{background:#16a34a;color:#fff;transform:translateY(-3px)}
+.header-icon{transition:color .2s,transform .2s;display:inline-flex;padding:5px;border-radius:8px}
+.header-icon:hover{color:#0aa65a;transform:translateY(-2px);background:#f0fcf4}
+
+.panel{transition:box-shadow .2s ease}.panel:hover{box-shadow:0 9px 30px #172e1812}a:focus-visible,button:focus-visible,input:focus-visible{outline:2px solid #16a34a;outline-offset:2px}@media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:0.01ms!important;transition-duration:0.01ms!important}}
+
+/* A single focus ring around the complete search field and its button. */
+.catalog-search{transition:border-color .2s ease,box-shadow .2s ease}
+.catalog-search:focus-within{border-color:#16a34a;box-shadow:0 0 0 3px rgba(22,163,74,.12)}
+.catalog-search input:focus,.catalog-search input:focus-visible{outline:0!important;box-shadow:none!important;border-color:transparent!important}
+/* Narrow scrollbars are invisible until the filter group is hovered or keyboard-focused. */
+.filter-scroll{scrollbar-width:thin;scrollbar-color:transparent transparent;scrollbar-gutter:stable}
+.filter-scroll:hover,.filter-scroll:focus-within{scrollbar-color:#acb6ae transparent}
+.filter-scroll::-webkit-scrollbar{width:4px}
+.filter-scroll::-webkit-scrollbar-track{background:transparent}
+.filter-scroll::-webkit-scrollbar-thumb{background:transparent;border-radius:99px}
+.filter-scroll:hover::-webkit-scrollbar-thumb,.filter-scroll:focus-within::-webkit-scrollbar-thumb{background:#acb6ae}
+.filter-scroll::-webkit-scrollbar-thumb:hover{background:#7a8e7d}
+
+/* Focus belongs to the complete input group, not its inner native input. */
+.recovery-field-input:focus,.recovery-field-input:focus-visible,.catalog-search input:focus,.catalog-search input:focus-visible{outline:none!important;box-shadow:none!important;border-color:transparent!important;}
+.catalog-search:focus-within{border-color:#16a34a;box-shadow:0 0 0 3px rgba(22,163,74,.12)}
