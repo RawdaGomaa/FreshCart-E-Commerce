@@ -1,28 +1,148 @@
-# FreshCart — Next.js + Tailwind CSS
 
-A **from-scratch** e-commerce coursework implementation using Next.js App Router, Tailwind v4 and the Route E-commerce API.
+# FreshCart – E-Commerce Web Application
 
-## Run
+A modern, responsive e-commerce web application built with **Next.js, React, TypeScript, and Tailwind CSS v4**. FreshCart provides a complete online shopping experience, including product browsing, categories, brands, wishlist management, shopping cart, checkout, and user account functionality.
 
-1. Install Node.js 20+.
-2. Open this folder in VS Code.
-3. Run `npm install`, then `npm run dev`.
-4. Visit http://localhost:3000.
+## ✨ Features
 
-You can copy `.env.example` to `.env.local` to change the public API base.
+- **Modern UI:** Clean, responsive, and user-friendly interface.
+- **Product Catalog:** Browse products and explore product details.
+- **Categories & Brands:** Discover products through organized categories and brands.
+- **Search & Filtering:** Search and filter available products.
+- **Wishlist:** Save favorite products for later.
+- **Shopping Cart:** Add, remove, and manage products in the cart.
+- **Authentication:** Login, registration, and password recovery.
+- **Checkout:** Support for cash and online payment methods.
+- **Orders:** Access order-related functionality.
+- **Responsive Design:** Optimized for different screen sizes.
 
-## Pages
+## 🛠 Technologies Used
 
-Home `/`, Shop `/products`, Product `/products/[id]`, Categories `/categories`, Category `/categories/[id]`, Brands `/brands`, Brand `/brands/[id]`, Wishlist `/wishlist`, Cart `/cart`, Checkout `/checkout`, Orders `/orders`, Account `/profile`, Login `/login`, Register `/register`, Forgot Password `/forgot-password`, Verify `/verify-code`, Reset `/reset-password`.
+- Next.js (App Router)
+- React.js
+- TypeScript
+- Tailwind CSS v4
+- CSS
+- Route E-Commerce API
+- Local Storage
 
-## Important implementation notes
+## 📄 Application Pages & Routes
 
-- API: `https://ecommerce.routemisr.com/api/v1` (Route API), see the linked Postman documentation.
-- Products, brands and categories are loaded live from the API.
-- Cart and wishlist require an authenticated Route account. Changes persist via its API.
-- Cash and online checkout call different order endpoints; online redirects to the payment provider.
-- Tokens are stored in `localStorage` for this coursework implementation. For production, use a backend-authenticated secure HTTP-only cookie rather than browser storage.
-- Search and category/brand filters operate on the products currently loaded on the active pagination page. For a complete production catalog use API-level search/filter queries.
-- Newsletter is informational only, not a functioning subscription.
-- This is a working-source deliverable, **not** a verified pixel-perfect copy of the Figma file: direct Figma design access was blocked, so styling follows the public FreshCart demo references.
-- Requires local `npm install` and full browser testing against the API. Do not assume the payment service can be tested without a live account and valid checkout session.
+| Page | Route |
+|---|---|
+| Home | `/` |
+| Shop | `/products` |
+| Product Details | `/products/[id]` |
+| Categories | `/categories` |
+| Category Details | `/categories/[id]` |
+| Brands | `/brands` |
+| Brand Details | `/brands/[id]` |
+| Wishlist | `/wishlist` |
+| Shopping Cart | `/cart` |
+| Checkout | `/checkout` |
+| Orders | `/orders` |
+| User Profile | `/profile` |
+| Login | `/login` |
+| Register | `/register` |
+| Forgot Password | `/forgot-password` |
+| Verify Code | `/verify-code` |
+| Reset Password | `/reset-password` |
+
+## 📁 Project Structure
+
+```text
+FreshCart/
+│
+├── app/
+│   ├── [...slug]/
+│   │   └── page.tsx
+│   ├── globals.css
+│   ├── layout.tsx
+│   └── page.tsx
+│
+├── components/
+│   └── Reusable UI Components
+│
+├── lib/
+│   └── API and Utility Functions
+│
+├── public/
+│   └── Static Assets
+│
+├── package.json
+├── package-lock.json
+├── postcss.config.mjs
+├── tsconfig.json
+├── next-env.d.ts
+└── README.md
+```
+
+## 🚀 Getting Started
+
+### Prerequisites
+
+Make sure you have installed:
+
+- Node.js 20 or later
+- npm
+- Visual Studio Code
+
+### Installation
+
+1. Clone the repository:
+
+```bash
+git clone https://github.com/RawdaGomaa/FreshCart-E-Commerce.git
+```
+
+2. Navigate to the project directory:
+
+```bash
+cd FreshCart-E-Commerce
+```
+
+3. Install dependencies:
+
+```bash
+npm install
+```
+
+4. Start the development server:
+
+```bash
+npm run dev
+```
+
+5. Open your browser and visit:
+
+```text
+http://localhost:3000
+```
+
+## 🔗 API Integration
+
+The application integrates with the Route E-Commerce API:
+
+```text
+https://ecommerce.routemisr.com/api/v1
+```
+
+The API is used to retrieve product information, categories, brands, and handle authenticated shopping operations.
+
+## 📝 Important Notes
+
+- Products, categories, and brands are loaded from the API.
+- Cart and wishlist operations require an authenticated account.
+- Cash and online checkout use separate order endpoints.
+- Online checkout redirects users to the payment provider.
+- Authentication tokens are stored in browser Local Storage in this coursework implementation.
+- Search and filtering operate on products loaded on the active pagination page.
+- Newsletter functionality is currently informational and does not process subscriptions.
+
+## 🎓 Project Information
+
+FreshCart is a coursework project focused on implementing a modern e-commerce application using Next.js and modern frontend technologies.
+
+---
+
+**Developed with ❤️ using Next.js, React, and TypeScript.**
