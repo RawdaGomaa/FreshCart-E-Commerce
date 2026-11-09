@@ -147,18 +147,16 @@ function Auth({mode}:{mode:'login'|'register'|'forgot'|'verify'|'reset'}) {
          type={k.toLowerCase().includes('password')?'password':k==='email'?'email':'text'}
          className="input"
          value={values[k]||''}
-         onFocus={()=>{
-          if(k==='password'&&mode==='register')setShowPasswordRules(true);
-         }}
-         onBlur={()=>{
-          if(k==='password'&&mode==='register'&&!(values.password||'').length&&!passwordValidationAttempted){
-           setShowPasswordRules(false);
-          }
-         }}
          onChange={e=>{
-          update(k,e.target.value);
+          const nextPassword=e.target.value;
+          update(k,nextPassword);
           if(k==='password'&&mode==='register'){
-           setShowPasswordRules(e.target.value.length>0||passwordValidationAttempted);
+           // Show the checklist only while the password is incomplete.
+           // Keep it visible after a failed submit until all rules are met.
+           setShowPasswordRules(
+            !isStrongPassword(nextPassword) &&
+            (nextPassword.length>0 || passwordValidationAttempted)
+           );
           }
          }}
          placeholder={'Enter your '+k}
