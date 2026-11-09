@@ -1,303 +1,56 @@
-
 'use client';
-import {useEffect,useMemo,useState,FormEvent} from 'react';
-import Link from 'next/link';
-import {usePathname,useRouter,useSearchParams} from 'next/navigation';
-import {Heart,ShoppingCart,Trash2,Minus,Plus,ArrowLeft,Star,CheckCircle2,LockKeyhole,Search,Package,ShieldCheck} from 'lucide-react';
-import toast from 'react-hot-toast';
-import {useStore} from './StoreContext';
-import {request,getProduct,getProducts,getCategories,getBrands,Product,Category,Brand,Cart} from '@/lib/api';
-import ProfilePage from './ProfilePage';
-import PasswordRecovery from './PasswordRecovery';
-import ProductCard from './ProductCard';
-import ProductsGrid from './ProductsGrid';
-
+import {useEffect,useMemo,useState,FormEvent} from 'react';import Link from 'next/link';import {usePathname,useRouter,useSearchParams} from 'next/navigation';import {Heart,ShoppingCart,Trash2,Minus,Plus,ArrowLeft,Star,CheckCircle2,LockKeyhole,Search,Package,ShieldCheck} from 'lucide-react';import toast from 'react-hot-toast';import {useStore} from './StoreContext';import {request,getProduct,getProducts,getCategories,getBrands,Product,Category,Brand,Cart} from '@/lib/api';import ProfilePage from './ProfilePage';import PasswordRecovery from './PasswordRecovery';import ProductCard from './ProductCard';import ProductsGrid from './ProductsGrid';
 const heading=(title:string,subtitle:string)=><section className="bg-[linear-gradient(100deg,#0bae58,#28ce70)] py-8 text-white"><div className="wrap"><h1 className="text-2xl font-extrabold tracking-tight md:text-3xl">{title}</h1><p className="mt-2 text-xs text-white/90">{subtitle}</p></div></section>;
-
-function useFetch<T>(url:string){
- const [data,setData]=useState<T|null>(null),[error,setError]=useState(''),[loading,setLoading]=useState(true);
- useEffect(()=>{
-  let alive=true;
-  setLoading(true);
-  request<{data:T}>(url).then(r=>{if(alive)setData(r.data)}).catch(e=>{if(alive)setError(e.message)}).finally(()=>{if(alive)setLoading(false)});
-  return()=>{alive=false}
- },[url]);
- return{data,error,loading}
-}
-
+function useFetch<T>(url:string){const [data,setData]=useState<T|null>(null),[error,setError]=useState(''),[loading,setLoading]=useState(true);useEffect(()=>{let alive=true;setLoading(true);request<{data:T}>(url).then(r=>{if(alive)setData(r.data)}).catch(e=>{if(alive)setError(e.message)}).finally(()=>{if(alive)setLoading(false)});return()=>{alive=false}},[url]);return{data,error,loading}}
 function Catalog(){
  const router=useRouter(),params=useSearchParams();
  const [q,setQ]=useState(params.get('q')||'');
  const [categories,setCategories]=useState<Category[]>([]),[brands,setBrands]=useState<Brand[]>([]);
  const [category,setCategory]=useState(params.get('category')||''),[brand,setBrand]=useState(params.get('brand')||'');
  const urlFilters=params.toString();
-
- useEffect(()=>{
-  setQ(params.get('q')||'');
-  setCategory(params.get('category')||'');
-  setBrand(params.get('brand')||'')
- },[urlFilters]);
-
- useEffect(()=>{
-  getCategories().then(r=>setCategories(r.data)).catch(()=>{});
-  getBrands().then(r=>setBrands(r.data)).catch(()=>{})
- },[]);
-
+ useEffect(()=>{setQ(params.get('q')||'');setCategory(params.get('category')||'');setBrand(params.get('brand')||'')},[urlFilters]);
+ useEffect(()=>{getCategories().then(r=>setCategories(r.data)).catch(()=>{});getBrands().then(r=>setBrands(r.data)).catch(()=>{})},[]);
  function applyFilters(next:{q?:string,category?:string,brand?:string}){
   const selected={q,category,brand,...next};
-  setQ(selected.q);
-  setCategory(selected.category);
-  setBrand(selected.brand);
+  setQ(selected.q);setCategory(selected.category);setBrand(selected.brand);
   const url=new URLSearchParams();
   if(selected.q.trim())url.set('q',selected.q.trim());
   if(selected.category)url.set('category',selected.category);
   if(selected.brand)url.set('brand',selected.brand);
   router.replace('/products'+(url.size?'?'+url.toString():''),{scroll:false});
  }
-
  const clear=()=>applyFilters({q:'',category:'',brand:''});
-
- return <>
-  <div className="wrap pt-7 text-xs text-slate-500"><Link href="/">Home</Link> / Search Results</div>
-  <section className="wrap py-8">
-   <label className="catalog-search mb-7 flex max-w-xl items-center gap-3 rounded-lg border border-slate-200 bg-white px-4">
-    <Search size={19} className="text-slate-400"/>
-    <input className="min-w-0 w-full bg-transparent py-3 outline-none focus:outline-none focus:ring-0" placeholder="Search for products..." value={q} onChange={e=>applyFilters({q:e.target.value})}/>
-   </label>
-   <div className="grid items-start gap-6 lg:grid-cols-[230px_minmax(0,1fr)]">
-    <aside className="panel space-y-7 p-5">
-     <div>
-      <h2 className="mb-3 text-sm font-bold">Categories</h2>
-      <div className="filter-scroll grid max-h-48 gap-2 overflow-y-auto pr-2">
-       {categories.map(c=><label key={c._id} className="flex cursor-pointer items-center gap-2 text-xs text-slate-600"><input type="checkbox" checked={category===c._id} onChange={()=>applyFilters({category:category===c._id?'':c._id,brand:''})} className="accent-green-600"/>{c.name}</label>)}
-      </div>
-     </div>
-     <div><h2 className="mb-3 text-sm font-bold">Price Range</h2><p className="text-xs text-slate-500">Prices are shown in EGP</p></div>
-     <div>
-      <h2 className="mb-3 text-sm font-bold">Brands</h2>
-      <div className="filter-scroll grid max-h-56 gap-2 overflow-y-auto pr-2">
-       {brands.map(b=><label key={b._id} className="flex cursor-pointer items-center gap-2 text-xs text-slate-600"><input type="checkbox" checked={brand===b._id} onChange={()=>applyFilters({brand:brand===b._id?'':b._id})} className="accent-green-600"/>{b.name}</label>)}
-      </div>
-     </div>
-     {(brand||category||q)&&<button className="btn btn-outline w-full" onClick={clear}>Clear filters</button>}
-    </aside>
-    <div className="min-w-0">
-     <div className="mb-5 flex items-center justify-between gap-3"><h1 className="font-bold">All Products</h1><span className="text-xs text-slate-500">Browse fresh finds</span></div>
-     <ProductsGrid search={q} category={category} brand={brand} onClearFilters={clear}/>
-    </div>
-   </div>
-  </section>
- </>
+ return <><div className="wrap pt-7 text-xs text-slate-500"><Link href="/">Home</Link> / Search Results</div><section className="wrap py-8">
+ <label className="catalog-search mb-7 flex max-w-xl items-center gap-3 rounded-lg border border-slate-200 bg-white px-4"><Search size={19} className="text-slate-400"/><input className="min-w-0 w-full bg-transparent py-3 outline-none focus:outline-none focus:ring-0" placeholder="Search for products..." value={q} onChange={e=>applyFilters({q:e.target.value})}/></label>
+ <div className="grid items-start gap-6 lg:grid-cols-[230px_minmax(0,1fr)]"><aside className="panel space-y-7 p-5">
+ <div><h2 className="mb-3 text-sm font-bold">Categories</h2><div className="filter-scroll grid max-h-48 gap-2 overflow-y-auto pr-2">{categories.map(c=><label key={c._id} className="flex cursor-pointer items-center gap-2 text-xs text-slate-600"><input type="checkbox" checked={category===c._id} onChange={()=>applyFilters({category:category===c._id?'':c._id,brand:''})} className="accent-green-600"/>{c.name}</label>)}</div></div>
+ <div><h2 className="mb-3 text-sm font-bold">Price Range</h2><p className="text-xs text-slate-500">Prices are shown in EGP</p></div>
+ <div><h2 className="mb-3 text-sm font-bold">Brands</h2><div className="filter-scroll grid max-h-56 gap-2 overflow-y-auto pr-2">{brands.map(b=><label key={b._id} className="flex cursor-pointer items-center gap-2 text-xs text-slate-600"><input type="checkbox" checked={brand===b._id} onChange={()=>applyFilters({brand:brand===b._id?'':b._id})} className="accent-green-600"/>{b.name}</label>)}</div></div>
+ {(brand||category||q)&&<button className="btn btn-outline w-full" onClick={clear}>Clear filters</button>}</aside>
+ <div className="min-w-0"><div className="mb-5 flex items-center justify-between gap-3"><h1 className="font-bold">All Products</h1><span className="text-xs text-slate-500">Browse fresh finds</span></div><ProductsGrid search={q} category={category} brand={brand} onClearFilters={clear}/></div></div></section></>
 }
-
-function Collections({kind,selected}:{kind:'brands'|'categories',selected?:string}){
- const {data,error,loading}=useFetch<(Brand|Category)[]>('/'+kind+(selected?'/'+encodeURIComponent(selected):''));
- const list=Array.isArray(data)?data:[];
- const selectedObj=selected&&!Array.isArray(data)?data as unknown as (Brand|Category):null;
-
- return <>
-  {kind==='brands'?<section className="bg-gradient-to-r from-violet-700 to-purple-400 py-12 text-white"><div className="wrap"><p className="mb-2 text-xs">Home / Brands</p><h1 className="text-3xl font-extrabold">Top Brands</h1><p className="text-sm">Shop from your favorite brands</p></div></section>:heading('All Categories','Explore our categories')}
-  <div className="wrap py-12">
-   {loading?<div className="skeleton h-72"/>:error?<p role="alert" className="text-red-500">{error}</p>:selectedObj?
-    <><div className="mb-8 flex items-center gap-5"><img className="h-24 w-24 rounded-xl object-cover" src={selectedObj.image} alt={selectedObj.name}/><h2 className="section-title">{selectedObj.name}</h2></div><Link href={'/products?'+(kind==='brands'?'brand':'category')+'='+selectedObj._id} className="btn">Browse products →</Link></>:
-    <div className="grid grid-cols-2 gap-5 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">{list.map(x=><Link key={x._id} href={'/'+kind+'/'+x._id} className="panel overflow-hidden p-3 text-center transition hover:shadow-xl"><img loading="lazy" className="mx-auto h-32 w-full object-contain" src={x.image} alt={x.name}/><h3 className="py-4 font-bold">{x.name}</h3></Link>)}</div>}
-  </div>
- </>
-}
-
-function Details({id}:{id:string}){
- const {data:p,error,loading}=useFetch<Product>('/products/'+id);
- const [image,setImage]=useState('');
- const {addCart,toggleWish,wishlist}=useStore();
-
- useEffect(()=>setImage(p?.imageCover||''),[p]);
-
- return <div className="wrap py-12">
-  {loading?<div className="skeleton h-[500px]"/>:error?<div role="alert" className="text-red-500">{error}</div>:p&&
-   <><div className="grid items-start gap-12 md:grid-cols-2">
-    <div>
-     <div className="rounded-2xl bg-[#f7faf7] p-7"><img src={image||p.imageCover} alt={p.title} className="h-[390px] w-full object-contain"/></div>
-     <div className="mt-4 flex gap-3 overflow-auto">{(p.images?.length?p.images:[p.imageCover]).map((im,i)=><button onClick={()=>setImage(im)} key={i} className="h-20 w-20 shrink-0 rounded-xl border p-2"><img alt={`${p.title} view ${i+1}`} src={im} className="h-full w-full object-contain"/></button>)}</div>
-    </div>
-    <div>
-     <p className="mb-4 text-sm font-bold text-[#179a46]">{p.category?.name}</p>
-     <h1 className="text-3xl font-extrabold leading-tight">{p.title}</h1>
-     <p className="mt-5 flex items-center gap-2 text-amber-500"><Star fill="currentColor" size={18}/> {p.ratingsAverage} <span className="text-sm text-[#879489]">({p.ratingsQuantity} reviews)</span></p>
-     <p className="mt-6 text-3xl font-extrabold text-[#159742]">{p.priceAfterDiscount||p.price} EGP</p>
-     <p className="mt-6 leading-8 text-[#758278]">{p.description}</p>
-     <p className="mt-6 text-sm text-[#67766c]">Brand: <b>{p.brand?.name}</b></p>
-     <div className="mt-8 flex flex-wrap gap-3">
-      <button onClick={()=>addCart(p._id)} className="btn"><ShoppingCart size={19}/> Add to cart</button>
-      <button onClick={()=>toggleWish(p._id)} className="btn btn-outline"><Heart size={19} fill={wishlist.includes(p._id)?'currentColor':'none'}/> {wishlist.includes(p._id)?'Saved':'Wishlist'}</button>
-     </div>
-     <div className="mt-8 flex items-center gap-2 rounded-xl bg-[#eff9f0] p-4 text-sm text-[#238745]"><ShieldCheck size={19}/> Secure checkout and quality products</div>
-    </div>
-   </div></>}
-  </div>
-}
-
-function Wish(){
- const {token,wishlist,toggleWish,addCart}=useStore();
- const [products,setProducts]=useState<Product[]>([]);
- const [loading,setLoading]=useState(true);
-
- useEffect(()=>{
-  if(!token){setLoading(false);return}
-  setLoading(true);
-  request<{data:Product[]}>('/wishlist',{},token).then(r=>setProducts(r.data)).catch(e=>toast.error(e.message)).finally(()=>setLoading(false))
- },[token,wishlist.length]);
-
- return <>
-  <div className="wrap pt-8 text-xs text-slate-500">Home / Wishlist</div>
-  <section className="wrap pb-14 pt-4">
-   <h1 className="mb-8 flex items-center gap-3 text-2xl font-extrabold"><Heart className="text-rose-500"/> My Wishlist <span className="text-sm font-normal text-slate-500">{products.length} items saved</span></h1>
-   {!token?<AuthGate/>:loading?<div className="skeleton h-80"/>:!products.length?<Empty title="Your wishlist is empty"/>:
-    <div className="overflow-x-auto rounded-xl border border-slate-100">
-     <table className="w-full min-w-[600px] text-left text-sm">
-      <thead className="bg-slate-50 text-slate-600"><tr><th className="p-4">Product</th><th className="p-4">Price</th><th className="p-4">Status</th><th className="p-4">Actions</th></tr></thead>
-      <tbody>{products.map(p=><tr key={p._id} className="border-t border-slate-100">
-       <td className="p-3"><div className="flex items-center gap-3"><img src={p.imageCover} alt={p.title} className="h-16 w-16 rounded-lg object-contain" onError={e=>{e.currentTarget.style.opacity='0.25'}}/><div><Link href={'/products/'+p._id} className="font-semibold hover:text-green-600">{p.title}</Link><p className="text-xs text-slate-500">{p.category?.name}</p></div></div></td>
-       <td className="p-3 font-bold">{p.priceAfterDiscount||p.price} EGP</td>
-       <td className="p-3"><span className="rounded-full bg-green-50 px-3 py-1 text-xs text-green-700">{p.quantity===0?'Out of stock':'In Stock'}</span></td>
-       <td className="p-3"><div className="flex gap-2"><button className="btn text-xs" onClick={()=>addCart(p._id)}>Add to Cart</button><button aria-label={'Remove '+p.title} className="rounded-lg border p-2 text-red-500" onClick={()=>toggleWish(p._id)}><Trash2 size={16}/></button></div></td>
-      </tr>)}</tbody>
-     </table>
-    </div>}
-  </section>
- </>
-}
-
-function Empty({title}:{title:string}){
- return <div className="panel mx-auto max-w-xl px-6 py-16 text-center"><ShoppingCart className="mx-auto mb-5 text-[#179c46]" size={45}/><h2 className="text-xl font-bold">{title}</h2><p className="my-4 text-sm text-[#849287]">Explore products and find something you love.</p><Link href="/products" className="btn">Continue shopping</Link></div>
-}
-
-function AuthGate(){
- return <div className="panel mx-auto max-w-xl p-12 text-center"><LockKeyhole className="mx-auto mb-4 text-[#189948]" size={40}/><h2 className="mb-3 text-xl font-bold">Sign in to continue</h2><Link href="/login" className="btn">Sign In</Link></div>
-}
-
+function Collections({kind,selected}:{kind:'brands'|'categories',selected?:string}){const {data,error,loading}=useFetch<(Brand|Category)[]>('/'+kind+(selected?'/'+encodeURIComponent(selected):''));const list=Array.isArray(data)?data:[];const selectedObj=selected&&!Array.isArray(data)?data as unknown as (Brand|Category):null;return <>{kind==='brands'?<section className="bg-gradient-to-r from-violet-700 to-purple-400 py-12 text-white"><div className="wrap"><p className="mb-2 text-xs">Home / Brands</p><h1 className="text-3xl font-extrabold">Top Brands</h1><p className="text-sm">Shop from your favorite brands</p></div></section>:heading('All Categories','Explore our categories')}<div className="wrap py-12">{loading?<div className="skeleton h-72"/>:error?<p role="alert" className="text-red-500">{error}</p>:selectedObj?<><div className="mb-8 flex items-center gap-5"><img className="h-24 w-24 rounded-xl object-cover" src={selectedObj.image} alt={selectedObj.name}/><h2 className="section-title">{selectedObj.name}</h2></div><Link href={'/products?'+(kind==='brands'?'brand':'category')+'='+selectedObj._id} className="btn">Browse products →</Link></>:<div className="grid grid-cols-2 gap-5 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">{list.map(x=><Link key={x._id} href={'/'+kind+'/'+x._id} className="panel overflow-hidden p-3 text-center transition hover:shadow-xl"><img loading="lazy" className="mx-auto h-32 w-full object-contain" src={x.image} alt={x.name}/><h3 className="py-4 font-bold">{x.name}</h3></Link>)}</div>}</div></>}
+function Details({id}:{id:string}){const {data:p,error,loading}=useFetch<Product>('/products/'+id);const [image,setImage]=useState('');const {addCart,toggleWish,wishlist}=useStore();useEffect(()=>setImage(p?.imageCover||''),[p]);return <div className="wrap py-12">{loading?<div className="skeleton h-[500px]"/>:error?<div role="alert" className="text-red-500">{error}</div>:p&&<><div className="grid items-start gap-12 md:grid-cols-2"><div><div className="rounded-2xl bg-[#f7faf7] p-7"><img src={image||p.imageCover} alt={p.title} className="h-[390px] w-full object-contain"/></div><div className="mt-4 flex gap-3 overflow-auto">{(p.images?.length?p.images:[p.imageCover]).map((im,i)=><button onClick={()=>setImage(im)} key={i} className="h-20 w-20 shrink-0 rounded-xl border p-2"><img alt={`${p.title} view ${i+1}`} src={im} className="h-full w-full object-contain"/></button>)}</div></div><div><p className="mb-4 text-sm font-bold text-[#179a46]">{p.category?.name}</p><h1 className="text-3xl font-extrabold leading-tight">{p.title}</h1><p className="mt-5 flex items-center gap-2 text-amber-500"><Star fill="currentColor" size={18}/> {p.ratingsAverage} <span className="text-sm text-[#879489]">({p.ratingsQuantity} reviews)</span></p><p className="mt-6 text-3xl font-extrabold text-[#159742]">{p.priceAfterDiscount||p.price} EGP</p><p className="mt-6 leading-8 text-[#758278]">{p.description}</p><p className="mt-6 text-sm text-[#67766c]">Brand: <b>{p.brand?.name}</b></p><div className="mt-8 flex flex-wrap gap-3"><button onClick={()=>addCart(p._id)} className="btn"><ShoppingCart size={19}/> Add to cart</button><button onClick={()=>toggleWish(p._id)} className="btn btn-outline"><Heart size={19} fill={wishlist.includes(p._id)?'currentColor':'none'}/> {wishlist.includes(p._id)?'Saved':'Wishlist'}</button></div><div className="mt-8 flex items-center gap-2 rounded-xl bg-[#eff9f0] p-4 text-sm text-[#238745]"><ShieldCheck size={19}/> Secure checkout and quality products</div></div></div></>}</div>}
+function Wish(){const {token,wishlist,toggleWish,addCart}=useStore();const [products,setProducts]=useState<Product[]>([]),[loading,setLoading]=useState(true);useEffect(()=>{if(!token){setLoading(false);return}setLoading(true);request<{data:Product[]}>('/wishlist',{},token).then(r=>setProducts(r.data)).catch(e=>toast.error(e.message)).finally(()=>setLoading(false))},[token,wishlist.length]);return <><div className="wrap pt-8 text-xs text-slate-500">Home / Wishlist</div><section className="wrap pb-14 pt-4"><h1 className="mb-8 flex items-center gap-3 text-2xl font-extrabold"><Heart className="text-rose-500"/> My Wishlist <span className="text-sm font-normal text-slate-500">{products.length} items saved</span></h1>{!token?<AuthGate/>:loading?<div className="skeleton h-80"/>:!products.length?<Empty title="Your wishlist is empty"/>:<div className="overflow-x-auto rounded-xl border border-slate-100"><table className="w-full min-w-[600px] text-left text-sm"><thead className="bg-slate-50 text-slate-600"><tr><th className="p-4">Product</th><th className="p-4">Price</th><th className="p-4">Status</th><th className="p-4">Actions</th></tr></thead><tbody>{products.map(p=><tr key={p._id} className="border-t border-slate-100"><td className="p-3"><div className="flex items-center gap-3"><img src={p.imageCover} alt={p.title} className="h-16 w-16 rounded-lg object-contain" onError={e=>{e.currentTarget.style.opacity='0.25'}}/><div><Link href={'/products/'+p._id} className="font-semibold hover:text-green-600">{p.title}</Link><p className="text-xs text-slate-500">{p.category?.name}</p></div></div></td><td className="p-3 font-bold">{p.priceAfterDiscount||p.price} EGP</td><td className="p-3"><span className="rounded-full bg-green-50 px-3 py-1 text-xs text-green-700">{p.quantity===0?'Out of stock':'In Stock'}</span></td><td className="p-3"><div className="flex gap-2"><button className="btn text-xs" onClick={()=>addCart(p._id)}>Add to Cart</button><button aria-label={'Remove '+p.title} className="rounded-lg border p-2 text-red-500" onClick={()=>toggleWish(p._id)}><Trash2 size={16}/></button></div></td></tr>)}</tbody></table></div>}</section></>}
+function Empty({title}:{title:string}){return <div className="panel mx-auto max-w-xl px-6 py-16 text-center"><ShoppingCart className="mx-auto mb-5 text-[#179c46]" size={45}/><h2 className="text-xl font-bold">{title}</h2><p className="my-4 text-sm text-[#849287]">Explore products and find something you love.</p><Link href="/products" className="btn">Continue shopping</Link></div>}
+function AuthGate(){return <div className="panel mx-auto max-w-xl p-12 text-center"><LockKeyhole className="mx-auto mb-4 text-[#189948]" size={40}/><h2 className="mb-3 text-xl font-bold">Sign in to continue</h2><Link href="/login" className="btn">Sign In</Link></div>}
 const isValidCartProduct=(item:Cart['products'][number])=>Boolean(item.product?._id && /^[0-9a-f]{24}$/i.test(item.product._id));
-
-function CartPage(){
- const {token,cart,busy,changeCount,removeCart,clearCart}=useStore();
-
- return <>{heading('Your Shopping Cart','Review your products before checkout')}
-  <section className="wrap py-12">
-   {!token?<AuthGate/>:!cart?.products?.length?<Empty title="Your shopping cart is empty"/>:
-    <div className="grid items-start gap-8 lg:grid-cols-[1fr_330px]">
-     <div className="panel divide-y divide-[#edf1ed]">
-      {cart.products.map(item=><div key={item.product?._id||item._id} className="flex flex-wrap items-center gap-4 p-5">
-       <img src={item.product?.imageCover||'/product-placeholder.svg'} alt={item.product?.title||'Product unavailable'} onError={e=>{e.currentTarget.src='/product-placeholder.svg'}} className="h-24 w-24 rounded-lg bg-slate-50 object-contain"/>
-       <div className="min-w-[180px] flex-1">
-        {isValidCartProduct(item)?<Link className="font-bold hover:text-[#159c45]" href={'/products/'+item.product._id}>{item.product.title||'Product'}</Link>:<strong className="text-amber-700">Product unavailable — refresh the cart</strong>}
-        <p className="mt-2 font-bold text-[#159940]">{item.price} EGP</p>
-        <button disabled={!isValidCartProduct(item)||busy} onClick={()=>removeCart(item.product._id)} className="mt-2 flex gap-1 text-xs text-red-500"><Trash2 size={15}/> Remove</button>
-       </div>
-       <div className="flex items-center gap-3 rounded-lg border p-2">
-        <button disabled={busy||item.count<=1||!isValidCartProduct(item)} onClick={()=>changeCount(item.product._id,item.count-1)} aria-label="Decrease"><Minus size={16}/></button>
-        <b>{item.count}</b>
-        <button disabled={busy||!isValidCartProduct(item)} onClick={()=>changeCount(item.product._id,item.count+1)} aria-label="Increase"><Plus size={16}/></button>
-       </div>
-      </div>)}
-      <button onClick={clearCart} className="m-5 flex items-center gap-2 text-sm text-red-500"><Trash2 size={16}/> Clear cart</button>
-     </div>
-     <div className="panel p-6">
-      <h2 className="mb-6 text-xl font-extrabold">Order Summary</h2>
-      <div className="mb-5 flex justify-between"><span>Subtotal</span><b>{cart.totalCartPrice} EGP</b></div>
-      <div className="mb-5 flex justify-between text-sm"><span>Delivery</span><span className="text-[#158b40]">Calculated at checkout</span></div>
-      <div className="mb-6 flex justify-between border-t pt-5 text-lg font-extrabold"><span>Total</span><span className="text-[#168d40]">{cart.totalCartPrice} EGP</span></div>
-      {cart.products.every(isValidCartProduct)?<Link href="/checkout" className="btn w-full">Proceed to Checkout →</Link>:<p role="alert" className="rounded-lg bg-amber-50 p-3 text-sm text-amber-800">Some cart items are missing their product data. Refresh the page before checking out.</p>}
-     </div>
-    </div>}
-  </section>
- </>;
-}
-
-function Checkout(){
- const {cart,token,refresh}=useStore();
- const [form,setForm]=useState({details:'',phone:'',city:''}),[loading,setLoading]=useState(false),[method,setMethod]=useState<'cash'|'online'>('cash'),[errors,setErrors]=useState<Record<string,string>>({});
- const router=useRouter();
-
- async function submit(e:FormEvent){
-  e.preventDefault();
-  if(!token||!cart?._id){toast.error('Please sign in and add items to your cart');return}
-  if(!cart.products.every(isValidCartProduct)){toast.error('Refresh your cart to restore missing product information before checkout');return}
-  const bad:Record<string,string>={};
-  if(!form.city.trim())bad.city='City is required';
-  if(!form.details.trim())bad.details='Street address is required';
-  if(!/^01[0125][0-9]{8}$/.test(form.phone))bad.phone='Enter a valid Egyptian mobile number';
-  setErrors(bad);
-  if(Object.keys(bad).length)return;
-  setLoading(true);
-  try{
-   const info={shippingAddress:form};
-   if(method==='cash'){
-    const created=await request<any>(`/orders/${cart._id}`,{method:'POST',body:JSON.stringify(info)},token);
-    if(!created?.data?._id && !created?.data?.id && !created?.data?.orderId)throw new Error('The server did not confirm an order ID. Please check your order history before retrying.');
-    sessionStorage.setItem('fc_last_order_id',String(created.data._id||created.data.id||created.data.orderId));
-    await refresh().catch(()=>{});
-    toast.success('Order created successfully');
-    router.push('/orders');
-   }else{
-    const r=await request<any>(`/orders/checkout-session/${cart._id}?url=${encodeURIComponent(window.location.origin)}`,{method:'POST',body:JSON.stringify(info)},token);
-    if(r.session?.url)window.location.href=r.session.url;
-    else throw Error('Payment URL was not returned')
-   }
-  }catch(e:any){toast.error(e.message)}
-  finally{setLoading(false)}
- }
-
- return <section className="wrap py-9">
-  <nav className="mb-4 text-xs text-slate-500"><Link href="/">Home</Link> / <Link href="/cart">Cart</Link> / Checkout</nav>
-  <h1 className="text-2xl font-extrabold">Complete Your Order</h1>
-  <p className="mb-8 text-sm text-slate-500">Review your items and complete your purchase</p>
-  {!token?<AuthGate/>:!cart?.products?.length?<Empty title="Add products to your cart first"/>:
-   <form onSubmit={submit} noValidate className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_330px]">
-    <div className="space-y-6">
-     <div className="panel overflow-hidden">
-      <h2 className="bg-green-700 px-5 py-4 font-bold text-white">Shipping Address</h2>
-      <div className="space-y-5 p-5">
-       <p className="rounded-lg bg-green-50 p-3 text-sm text-green-800">Delivery information · Please enter an accurate shipping address.</p>
-       {([['city','City','e.g. Cairo, Alexandria, Giza'],['details','Street Address','Street name, building number, floor, apartment'],['phone','Phone Number','01xxxxxxxxx']] as const).map(([k,label,ph])=><label className="block text-sm font-semibold" key={k}>{label} *<input className={'input mt-2 '+(errors[k]?'!border-red-500':'')} value={form[k]} placeholder={ph} onChange={e=>{setForm(v=>({...v,[k]:e.target.value}));setErrors(v=>({...v,[k]:''}))}}/>{errors[k]&&<span className="mt-1 block text-xs text-red-600">{errors[k]}</span>}</label>)}
-      </div>
-     </div>
-     <div className="panel overflow-hidden">
-      <h2 className="bg-green-700 px-5 py-4 font-bold text-white">Payment Method</h2>
-      <div className="grid gap-3 p-5">
-       {([['cash','Cash on Delivery','Pay when your order arrives at your doorstep'],['online','Pay Online','Secure payment through the provider']] as const).map(([val,label,desc])=><label key={val} className={'flex cursor-pointer items-center gap-3 rounded-lg border p-4 '+(method===val?'border-green-500 bg-green-50':'border-slate-200')}><input type="radio" name="payment" checked={method===val} onChange={()=>setMethod(val)} className="accent-green-600"/><span><strong className="block text-sm">{label}</strong><small className="text-slate-500">{desc}</small></span></label>)}
-       <div className="rounded-lg bg-green-50 p-3 text-xs text-green-700">Secure & encrypted · Card payments take place on the payment provider's website.</div>
-      </div>
-     </div>
-    </div>
-    <aside className="panel overflow-hidden">
-     <h2 className="bg-green-700 px-5 py-4 font-bold text-white">Order Summary</h2>
-     <div className="space-y-4 p-5">
-      {cart.products.map(item=><div className="flex items-center gap-3" key={item.product?._id||item._id}>
-       <img src={item.product?.imageCover||'/product-placeholder.svg'} onError={e=>{e.currentTarget.src='/product-placeholder.svg'}} alt={item.product?.title||'Product'} className="h-14 w-14 rounded-lg bg-slate-50 object-contain"/>
-       <div className="min-w-0 flex-1"><p className="line-clamp-2 text-xs font-semibold">{item.product?.title||'Product unavailable'}</p><span className="text-xs text-slate-500">{item.count} × {item.price} EGP</span></div>
-       <b className="text-xs">{item.count*item.price}</b>
-      </div>)}
-      <div className="flex justify-between border-t pt-4 text-sm"><span>Subtotal</span><b>{cart.totalCartPrice} EGP</b></div>
-      <div className="flex justify-between text-sm"><span>Shipping</span><span className="text-green-600">Calculated at checkout</span></div>
-      <div className="flex justify-between border-t pt-4 font-bold"><span>Total</span><span className="text-green-600">{cart.totalCartPrice} EGP</span></div>
-      <button type="submit" disabled={loading} className="btn w-full">{loading?'Placing order...':'Place Order'}</button>
-     </div>
-    </aside>
-   </form>}
- </section>
-}
-
+function CartPage(){const {token,cart,busy,changeCount,removeCart,clearCart}=useStore();return <>{heading('Your Shopping Cart','Review your products before checkout')}<section className="wrap py-12">{!token?<AuthGate/>:!cart?.products?.length?<Empty title="Your shopping cart is empty"/>:<div className="grid items-start gap-8 lg:grid-cols-[1fr_330px]"><div className="panel divide-y divide-[#edf1ed]">{cart.products.map(item=><div key={item.product?._id||item._id} className="flex flex-wrap items-center gap-4 p-5"><img src={item.product?.imageCover||'/product-placeholder.svg'} alt={item.product?.title||'Product unavailable'} onError={e=>{e.currentTarget.src='/product-placeholder.svg'}} className="h-24 w-24 rounded-lg bg-slate-50 object-contain"/><div className="min-w-[180px] flex-1">{isValidCartProduct(item)?<Link className="font-bold hover:text-[#159c45]" href={'/products/'+item.product._id}>{item.product.title||'Product'}</Link>:<strong className="text-amber-700">Product unavailable — refresh the cart</strong>}<p className="mt-2 font-bold text-[#159940]">{item.price} EGP</p><button disabled={!isValidCartProduct(item)||busy} onClick={()=>removeCart(item.product._id)} className="mt-2 flex gap-1 text-xs text-red-500"><Trash2 size={15}/> Remove</button></div><div className="flex items-center gap-3 rounded-lg border p-2"><button disabled={busy||item.count<=1||!isValidCartProduct(item)} onClick={()=>changeCount(item.product._id,item.count-1)} aria-label="Decrease"><Minus size={16}/></button><b>{item.count}</b><button disabled={busy||!isValidCartProduct(item)} onClick={()=>changeCount(item.product._id,item.count+1)} aria-label="Increase"><Plus size={16}/></button></div></div>)}<button onClick={clearCart} className="m-5 flex items-center gap-2 text-sm text-red-500"><Trash2 size={16}/> Clear cart</button></div><div className="panel p-6"><h2 className="mb-6 text-xl font-extrabold">Order Summary</h2><div className="mb-5 flex justify-between"><span>Subtotal</span><b>{cart.totalCartPrice} EGP</b></div><div className="mb-5 flex justify-between text-sm"><span>Delivery</span><span className="text-[#158b40]">Calculated at checkout</span></div><div className="mb-6 flex justify-between border-t pt-5 text-lg font-extrabold"><span>Total</span><span className="text-[#168d40]">{cart.totalCartPrice} EGP</span></div>{cart.products.every(isValidCartProduct)?<Link href="/checkout" className="btn w-full">Proceed to Checkout →</Link>:<p role="alert" className="rounded-lg bg-amber-50 p-3 text-sm text-amber-800">Some cart items are missing their product data. Refresh the page before checking out.</p>}</div></div>}</section></>}
+function Checkout(){const {cart,token,refresh}=useStore();const [form,setForm]=useState({details:'',phone:'',city:''}),[loading,setLoading]=useState(false),[method,setMethod]=useState<'cash'|'online'>('cash'),[errors,setErrors]=useState<Record<string,string>>({});const router=useRouter();async function submit(e:FormEvent){e.preventDefault();if(!token||!cart?._id){toast.error('Please sign in and add items to your cart');return}if(!cart.products.every(isValidCartProduct)){toast.error('Refresh your cart to restore missing product information before checkout');return}const bad:Record<string,string>={};if(!form.city.trim())bad.city='City is required';if(!form.details.trim())bad.details='Street address is required';if(!/^01[0125][0-9]{8}$/.test(form.phone))bad.phone='Enter a valid Egyptian mobile number';setErrors(bad);if(Object.keys(bad).length)return;setLoading(true);try{const info={shippingAddress:form};if(method==='cash'){const created=await request<any>(`/orders/${cart._id}`,{method:'POST',body:JSON.stringify(info)},token);if(!created?.data?._id && !created?.data?.id && !created?.data?.orderId)throw new Error('The server did not confirm an order ID. Please check your order history before retrying.');sessionStorage.setItem('fc_last_order_id',String(created.data._id||created.data.id||created.data.orderId));await refresh().catch(()=>{});toast.success('Order created successfully');router.push('/orders')}else{const r=await request<any>(`/orders/checkout-session/${cart._id}?url=${encodeURIComponent(window.location.origin)}`,{method:'POST',body:JSON.stringify(info)},token);if(r.session?.url)window.location.href=r.session.url;else throw Error('Payment URL was not returned')}}catch(e:any){toast.error(e.message)}finally{setLoading(false)}}return <section className="wrap py-9"><nav className="mb-4 text-xs text-slate-500"><Link href="/">Home</Link> / <Link href="/cart">Cart</Link> / Checkout</nav><h1 className="text-2xl font-extrabold">Complete Your Order</h1><p className="mb-8 text-sm text-slate-500">Review your items and complete your purchase</p>{!token?<AuthGate/>:!cart?.products?.length?<Empty title="Add products to your cart first"/>:<form onSubmit={submit} noValidate className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_330px]"><div className="space-y-6"><div className="panel overflow-hidden"><h2 className="bg-green-700 px-5 py-4 font-bold text-white">Shipping Address</h2><div className="space-y-5 p-5"><p className="rounded-lg bg-green-50 p-3 text-sm text-green-800">Delivery information · Please enter an accurate shipping address.</p>{([['city','City','e.g. Cairo, Alexandria, Giza'],['details','Street Address','Street name, building number, floor, apartment'],['phone','Phone Number','01xxxxxxxxx']] as const).map(([k,label,ph])=><label className="block text-sm font-semibold" key={k}>{label} *<input className={'input mt-2 '+(errors[k]?'!border-red-500':'')} value={form[k]} placeholder={ph} onChange={e=>{setForm(v=>({...v,[k]:e.target.value}));setErrors(v=>({...v,[k]:''}))}}/>{errors[k]&&<span className="mt-1 block text-xs text-red-600">{errors[k]}</span>}</label>)}</div></div><div className="panel overflow-hidden"><h2 className="bg-green-700 px-5 py-4 font-bold text-white">Payment Method</h2><div className="grid gap-3 p-5">{([['cash','Cash on Delivery','Pay when your order arrives at your doorstep'],['online','Pay Online','Secure payment through the provider']] as const).map(([val,label,desc])=><label key={val} className={'flex cursor-pointer items-center gap-3 rounded-lg border p-4 '+(method===val?'border-green-500 bg-green-50':'border-slate-200')}><input type="radio" name="payment" checked={method===val} onChange={()=>setMethod(val)} className="accent-green-600"/><span><strong className="block text-sm">{label}</strong><small className="text-slate-500">{desc}</small></span></label>)}<div className="rounded-lg bg-green-50 p-3 text-xs text-green-700">Secure & encrypted · Card payments take place on the payment provider's website.</div></div></div></div><aside className="panel overflow-hidden"><h2 className="bg-green-700 px-5 py-4 font-bold text-white">Order Summary</h2><div className="space-y-4 p-5">{cart.products.map(item=><div className="flex items-center gap-3" key={item.product?._id||item._id}><img src={item.product?.imageCover||'/product-placeholder.svg'} onError={e=>{e.currentTarget.src='/product-placeholder.svg'}} alt={item.product?.title||'Product'} className="h-14 w-14 rounded-lg bg-slate-50 object-contain"/><div className="min-w-0 flex-1"><p className="line-clamp-2 text-xs font-semibold">{item.product?.title||'Product unavailable'}</p><span className="text-xs text-slate-500">{item.count} × {item.price} EGP</span></div><b className="text-xs">{item.count*item.price}</b></div>)}<div className="flex justify-between border-t pt-4 text-sm"><span>Subtotal</span><b>{cart.totalCartPrice} EGP</b></div><div className="flex justify-between text-sm"><span>Shipping</span><span className="text-green-600">Calculated at checkout</span></div><div className="flex justify-between border-t pt-4 font-bold"><span>Total</span><span className="text-green-600">{cart.totalCartPrice} EGP</span></div><button type="submit" disabled={loading} className="btn w-full">{loading?'Placing order...':'Place Order'}</button></div></aside></form>}</section>}
 function Auth({mode}:{mode:'login'|'register'|'forgot'|'verify'|'reset'}) {
  const {login}=useStore();
  const router=useRouter();
  const [values,setValues]=useState<Record<string,string>>({});
  const [loading,setLoading]=useState(false);
  const [authError,setAuthError]=useState('');
+ const [showPasswordRules,setShowPasswordRules]=useState(false);
+ const [passwordValidationAttempted,setPasswordValidationAttempted]=useState(false);
 
  const fields=mode==='login'?['email','password']:mode==='register'?['name','email','password','rePassword','phone']:mode==='forgot'?['email']:mode==='verify'?['resetCode']:['email','newPassword'];
  const titles:{[key:string]:string}={login:'Welcome Back',register:'Create an Account',forgot:'Forgot Password',verify:'Verify Reset Code',reset:'Reset Password'};
  const update=(k:string,v:string)=>{setValues(s=>({...s,[k]:v}));setAuthError('')};
 
- // Password requirements (Register only)
+ // Password requirements (used for Register only)
  const passwordChecks=[
   {label:'At least 8 characters',test:(v:string)=>v.length>=8},
   {label:'One uppercase letter (A-Z)',test:(v:string)=>/[A-Z]/.test(v)},
@@ -315,6 +68,8 @@ function Auth({mode}:{mode:'login'|'register'|'forgot'|'verify'|'reset'}) {
 
   if(mode==='register'){
    if(!isStrongPassword(values.password||'')){
+    setShowPasswordRules(true);
+    setPasswordValidationAttempted(true);
     setAuthError('Please meet all password requirements.');
     return;
    }
@@ -377,18 +132,39 @@ function Auth({mode}:{mode:'login'|'register'|'forgot'|'verify'|'reset'}) {
         <span>
          {({rePassword:'Confirm Password',resetCode:'Verification code',newPassword:'New password'} as Record<string,string>)[k]||k.charAt(0).toUpperCase()+k.slice(1)}
         </span>
-
         <input
          required
-         minLength={mode==='register'&&k==='password'?8:undefined}
+         onInvalid={()=>{
+          if(k==='password'&&mode==='register'){
+           setShowPasswordRules(true);
+           setPasswordValidationAttempted(true);
+          }
+         }}
+         name={mode==='register'&&k==='password'?'freshcart-register-password':mode==='register'&&k==='rePassword'?'freshcart-register-confirm-password':k}
+         autoComplete={mode==='register'&&(k==='password'||k==='rePassword')?'new-password':k==='email'?'email':'off'}
+         autoCorrect="off"
+         spellCheck={false}
          type={k.toLowerCase().includes('password')?'password':k==='email'?'email':'text'}
          className="input"
          value={values[k]||''}
-         onChange={e=>update(k,e.target.value)}
+         onFocus={()=>{
+          if(k==='password'&&mode==='register')setShowPasswordRules(true);
+         }}
+         onBlur={()=>{
+          if(k==='password'&&mode==='register'&&!(values.password||'').length&&!passwordValidationAttempted){
+           setShowPasswordRules(false);
+          }
+         }}
+         onChange={e=>{
+          update(k,e.target.value);
+          if(k==='password'&&mode==='register'){
+           setShowPasswordRules(e.target.value.length>0||passwordValidationAttempted);
+          }
+         }}
          placeholder={'Enter your '+k}
         />
 
-        {k==='password'&&mode==='register'&&(
+        {k==='password'&&mode==='register'&&showPasswordRules&&(
          <div className="mt-1 rounded-lg bg-slate-50 p-3">
           <p className="mb-2 text-xs font-bold text-slate-700">Password requirements:</p>
           <ul className="grid gap-2">
@@ -442,117 +218,10 @@ function Auth({mode}:{mode:'login'|'register'|'forgot'|'verify'|'reset'}) {
 function getUserId(user:{id?:string,_id?:string}|null,token:string|null):string|undefined{
  if(user?._id||user?.id)return user._id||user.id;
  if(!token)return undefined;
- try{
-  const part=token.split('.')[1];
-  if(!part)return undefined;
-  const normalized=part.replace(/-/g,'+').replace(/_/g,'/');
-  const decoded=JSON.parse(atob(normalized.padEnd(Math.ceil(normalized.length/4)*4,'=')));
-  const id=decoded.id||decoded._id||decoded.userId||decoded.sub;
-  return typeof id==='string'&&id.length>0?id:undefined
- }catch{return undefined}
+ try{const part=token.split('.')[1];if(!part)return undefined;const normalized=part.replace(/-/g,'+').replace(/_/g,'/');const decoded=JSON.parse(atob(normalized.padEnd(Math.ceil(normalized.length/4)*4,'=')));const id=decoded.id||decoded._id||decoded.userId||decoded.sub;return typeof id==='string'&&id.length>0?id:undefined}catch{return undefined}
 }
+function Orders(){const {user,token}=useStore();const id=getUserId(user,token);const {data,error,loading}=useFetchOrders(token,id);const [expanded,setExpanded]=useState<string|null>(null);return <><div className="wrap pt-7 text-xs text-slate-500"><Link href="/">Home</Link> / My Orders</div><section className="wrap py-10"><div className="mb-7 flex items-center gap-3"><div className="rounded-xl bg-green-100 p-3 text-green-700"><Package size={24}/></div><div><h1 className="text-2xl font-extrabold">My Orders</h1><p className="text-sm text-slate-500">Track and manage your orders</p></div></div>{!token?<AuthGate/>:!id?<div role="alert" className="panel p-6 text-amber-800">We couldn’t identify your account to load orders. Please sign out and sign in again.</div>:loading?<div className="skeleton h-64"/>:error?<div role="alert" className="panel p-6 text-red-600">Unable to load orders: {error}</div>:!data?.length?<Empty title="No orders yet"/>:<div className="space-y-4">{data.map((order:any)=>{const key=String(order._id||order.id);const open=expanded===key;return <article key={key} className="panel overflow-hidden"><div className="flex flex-wrap items-center justify-between gap-4 p-5"><div className="flex items-center gap-3"><div className="rounded-xl bg-green-50 p-3 text-green-600"><Package size={22}/></div><div><span className="text-xs font-semibold text-amber-600">{order.isDelivered?'Delivered':order.isPaid?'Paid':'Processing'}</span><h2 className="font-bold">Order #{String(order.id||order._id).slice(-9)}</h2><p className="text-xs text-slate-500">{order.createdAt?new Date(order.createdAt).toLocaleString():''} · {order.cartItems?.length||0} items</p></div></div><div className="flex items-center gap-5"><strong className="text-green-700">{order.totalOrderPrice} EGP</strong><button type="button" className="rounded-lg border border-slate-200 px-4 py-2 text-sm hover:border-green-500 hover:text-green-700" onClick={()=>setExpanded(open?null:key)} aria-expanded={open}>{open?'Hide details':'Details'}</button></div></div>{open&&<div className="border-t bg-slate-50/60 p-5"><h3 className="mb-3 text-sm font-bold">Order items</h3><div className="space-y-3">{(order.cartItems||[]).map((item:any,i:number)=>{const product=item.product||{};return <div key={product._id||i} className="flex items-center gap-3 rounded-lg bg-white p-3"><img src={product.imageCover||'/product-placeholder.svg'} onError={e=>{e.currentTarget.src='/product-placeholder.svg'}} alt={product.title||'Product'} className="h-14 w-14 rounded-md object-contain"/><div className="min-w-0 flex-1"><p className="line-clamp-2 text-sm font-semibold">{product.title||'Product'}</p><p className="text-xs text-slate-500">Quantity: {item.count}</p></div><strong className="text-sm">{item.price} EGP</strong></div>})}</div>{order.shippingAddress&&<div className="mt-4 text-sm text-slate-600"><b>Delivery:</b> {[order.shippingAddress.details,order.shippingAddress.city].filter(Boolean).join(', ')}</div>}</div>}</article>})}</div>}</section></>}
+function useFetchOrders(token:string|null,id?:string){const [data,setData]=useState<any[]|null>(null),[error,setError]=useState(''),[loading,setLoading]=useState(true);useEffect(()=>{let active=true;setData(null);setError('');if(!token||!id){setLoading(false);return}setLoading(true);request<any>('/orders/user/'+encodeURIComponent(id),{},token).then(r=>{if(!active)return;const orders=Array.isArray(r)?r:Array.isArray(r?.data)?r.data:null;if(!orders)throw new Error('Unexpected order history response');setData(orders)}).catch(e=>{if(active)setError(e.message||'Could not load orders')}).finally(()=>{if(active)setLoading(false)});return()=>{active=false}},[token,id]);return{data,error,loading}}
+export default function Pages(){const pathname=usePathname(),segments=pathname.split('/').filter(Boolean);const [root,id]=segments;switch(root){case 'support':return <InfoPage title="Help Center" body="For help with your orders, contact our support team."/>;case 'shipping':return <InfoPage title="Shipping Information" body="Shipping options and delivery estimates are confirmed during checkout."/>;case 'returns':return <InfoPage title="Returns & Refunds" body="For return and refund requests, contact our support team with your order details."/>;case 'privacy':return <InfoPage title="Privacy Policy" body="Please contact our support team for the store's complete privacy policy."/>;case 'terms':return <InfoPage title="Terms of Service" body="Please contact our support team for the complete terms of service."/>;case 'products':return id?<Details id={id}/>:<Catalog/>;case 'categories':return <Collections kind="categories" selected={id}/>;case 'brands':return <Collections kind="brands" selected={id}/>;case 'wishlist':return <Wish/>;case 'cart':return <CartPage/>;case 'checkout':return <Checkout/>;case 'orders':return <Orders/>;case 'profile':return <ProfilePage/>;case 'login':return <Auth mode="login"/>;case 'register':return <Auth mode="register"/>;case 'forgot-password':return <PasswordRecovery step="forgot"/>;case 'verify-code':return <PasswordRecovery step="verify"/>;case 'reset-password':return <PasswordRecovery step="reset"/>;default:return <div className="wrap py-32 text-center"><h1 className="text-6xl font-extrabold">404</h1><p className="my-5">Page not found</p><Link href="/" className="btn">Back Home</Link></div>}}
 
-function Orders(){
- const {user,token}=useStore();
- const id=getUserId(user,token);
- const {data,error,loading}=useFetchOrders(token,id);
- const [expanded,setExpanded]=useState<string|null>(null);
-
- return <>
-  <div className="wrap pt-7 text-xs text-slate-500"><Link href="/">Home</Link> / My Orders</div>
-  <section className="wrap py-10">
-   <div className="mb-7 flex items-center gap-3">
-    <div className="rounded-xl bg-green-100 p-3 text-green-700"><Package size={24}/></div>
-    <div><h1 className="text-2xl font-extrabold">My Orders</h1><p className="text-sm text-slate-500">Track and manage your orders</p></div>
-   </div>
-
-   {!token?<AuthGate/>:!id?<div role="alert" className="panel p-6 text-amber-800">We couldn’t identify your account to load orders. Please sign out and sign in again.</div>:loading?<div className="skeleton h-64"/>:error?<div role="alert" className="panel p-6 text-red-600">Unable to load orders: {error}</div>:!data?.length?<Empty title="No orders yet"/>:
-    <div className="space-y-4">
-     {data.map((order:any)=>{
-      const key=String(order._id||order.id);
-      const open=expanded===key;
-      return <article key={key} className="panel overflow-hidden">
-       <div className="flex flex-wrap items-center justify-between gap-4 p-5">
-        <div className="flex items-center gap-3">
-         <div className="rounded-xl bg-green-50 p-3 text-green-600"><Package size={22}/></div>
-         <div>
-          <span className="text-xs font-semibold text-amber-600">{order.isDelivered?'Delivered':order.isPaid?'Paid':'Processing'}</span>
-          <h2 className="font-bold">Order #{String(order.id||order._id).slice(-9)}</h2>
-          <p className="text-xs text-slate-500">{order.createdAt?new Date(order.createdAt).toLocaleString():''} · {order.cartItems?.length||0} items</p>
-         </div>
-        </div>
-        <div className="flex items-center gap-5">
-         <strong className="text-green-700">{order.totalOrderPrice} EGP</strong>
-         <button type="button" className="rounded-lg border border-slate-200 px-4 py-2 text-sm hover:border-green-500 hover:text-green-700" onClick={()=>setExpanded(open?null:key)} aria-expanded={open}>{open?'Hide details':'Details'}</button>
-        </div>
-       </div>
-       {open&&<div className="border-t bg-slate-50/60 p-5">
-        <h3 className="mb-3 text-sm font-bold">Order items</h3>
-        <div className="space-y-3">
-         {(order.cartItems||[]).map((item:any,i:number)=>{
-          const product=item.product||{};
-          return <div key={product._id||i} className="flex items-center gap-3 rounded-lg bg-white p-3">
-           <img src={product.imageCover||'/product-placeholder.svg'} onError={e=>{e.currentTarget.src='/product-placeholder.svg'}} alt={product.title||'Product'} className="h-14 w-14 rounded-md object-contain"/>
-           <div className="min-w-0 flex-1"><p className="line-clamp-2 text-sm font-semibold">{product.title||'Product'}</p><p className="text-xs text-slate-500">Quantity: {item.count}</p></div>
-           <strong className="text-sm">{item.price} EGP</strong>
-          </div>
-         })}
-        </div>
-        {order.shippingAddress&&<div className="mt-4 text-sm text-slate-600"><b>Delivery:</b> {[order.shippingAddress.details,order.shippingAddress.city].filter(Boolean).join(', ')}</div>}
-       </div>}
-      </article>
-     })}
-    </div>}
-  </section>
- </>
-}
-
-function useFetchOrders(token:string|null,id?:string){
- const [data,setData]=useState<any[]|null>(null),[error,setError]=useState(''),[loading,setLoading]=useState(true);
- useEffect(()=>{
-  let active=true;
-  setData(null);
-  setError('');
-  if(!token||!id){setLoading(false);return}
-  setLoading(true);
-  request<any>('/orders/user/'+encodeURIComponent(id),{},token).then(r=>{
-   if(!active)return;
-   const orders=Array.isArray(r)?r:Array.isArray(r?.data)?r.data:null;
-   if(!orders)throw new Error('Unexpected order history response');
-   setData(orders)
-  }).catch(e=>{if(active)setError(e.message||'Could not load orders')}).finally(()=>{if(active)setLoading(false)});
-  return()=>{active=false}
- },[token,id]);
- return{data,error,loading}
-}
-
-export default function Pages(){
- const pathname=usePathname(),segments=pathname.split('/').filter(Boolean);
- const [root,id]=segments;
-
- switch(root){
-  case 'support':return <InfoPage title="Help Center" body="For help with your orders, contact our support team."/>;
-  case 'shipping':return <InfoPage title="Shipping Information" body="Shipping options and delivery estimates are confirmed during checkout."/>;
-  case 'returns':return <InfoPage title="Returns & Refunds" body="For return and refund requests, contact our support team with your order details."/>;
-  case 'privacy':return <InfoPage title="Privacy Policy" body="Please contact our support team for the store's complete privacy policy."/>;
-  case 'terms':return <InfoPage title="Terms of Service" body="Please contact our support team for the complete terms of service."/>;
-  case 'products':return id?<Details id={id}/>:<Catalog/>;
-  case 'categories':return <Collections kind="categories" selected={id}/>;
-  case 'brands':return <Collections kind="brands" selected={id}/>;
-  case 'wishlist':return <Wish/>;
-  case 'cart':return <CartPage/>;
-  case 'checkout':return <Checkout/>;
-  case 'orders':return <Orders/>;
-  case 'profile':return <ProfilePage/>;
-  case 'login':return <Auth mode="login"/>;
-  case 'register':return <Auth mode="register"/>;
-  case 'forgot-password':return <PasswordRecovery step="forgot"/>;
-  case 'verify-code':return <PasswordRecovery step="verify"/>;
-  case 'reset-password':return <PasswordRecovery step="reset"/>;
-  default:return <div className="wrap py-32 text-center"><h1 className="text-6xl font-extrabold">404</h1><p className="my-5">Page not found</p><Link href="/" className="btn">Back Home</Link></div>
- }
-}
-
-function InfoPage({title,body}:{title:string,body:string}){
- return <>{heading(title,'FreshCart customer information')}<section className="wrap py-16"><div className="panel max-w-2xl p-8"><p className="leading-8 text-[#53645b]">{body}</p><a href="mailto:support@freshcart.com" className="btn mt-6">Contact support</a></div></section></>
-}
+function InfoPage({title,body}:{title:string,body:string}){return <>{heading(title,'FreshCart customer information')}<section className="wrap py-16"><div className="panel max-w-2xl p-8"><p className="leading-8 text-[#53645b]">{body}</p><a href="mailto:support@freshcart.com" className="btn mt-6">Contact support</a></div></section></>}
